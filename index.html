@@ -25,11 +25,24 @@
 
     <fieldset class="block">
       <legend>1. Operação</legend>
-      <label for="op">Escolha a operação matemática</label>
-      <select id="op"></select>
+      <div class="mode-toggle">
+        <button type="button" class="modebtn active" data-opmode="predef">Pré-definida</button>
+        <button type="button" class="modebtn" data-opmode="expr">Expressão</button>
+      </div>
+
+      <div id="predefBox">
+        <label for="op">Escolha a operação matemática</label>
+        <select id="op"></select>
+      </div>
+
+      <div id="exprBox" class="hidden">
+        <label for="expr">Escreva a expressão (ex: 2x + 3, 2/2 + 2x)</label>
+        <input type="text" id="expr" placeholder="ex: 2x + 3">
+        <p class="hint" id="exprHint">As variáveis são detetadas automaticamente.</p>
+      </div>
     </fieldset>
 
-    <fieldset class="block">
+    <fieldset class="block" id="registCountBlock">
       <legend>2. Registadores de entrada</legend>
       <label for="qtd">Quantidade de valores</label>
       <div class="stepper">
