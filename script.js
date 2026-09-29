@@ -235,8 +235,31 @@ function atualizarRegisto(nome, valor) {
 }
 
 function renderCodigo() {
-  linhasCodigo = operacaoAtual().codigo;
-  codigoBox.innerHTML = linhasCodigo
+  linhasCodigo = operacaoAtual();
+  const n = parseInt(qtdInput.value, 10);
+  let codigo = '';
+  switch (linhasCodigo.label) {
+    case 'Soma':
+        codigo = generate_urm_sum(n);
+      break;
+    case 'Subtração':
+        codigo = generate_urm_sub(n);
+      break;
+    case 'Multiplicação':
+
+      break;
+    case 'Divisão':
+
+      break;
+    case 'Potência':
+
+      break;
+    
+    default:
+      break;
+  }
+  codigo.shift();
+  codigoBox.innerHTML = codigo
     .map((l, i) => `<span class="line" data-i="${i}">${i + 1}  ${l}</span>`)
     .join("\n");
 }
