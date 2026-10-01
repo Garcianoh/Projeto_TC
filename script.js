@@ -1,15 +1,7 @@
-// ---- Dados das operações (placeholders — motor real de URM vem depois) ----
-const OPERACOES = {
-  soma:        { label: "Soma",          inputs: 2, registosInfo: "R1..R(n+1)", codigo: ["J(2,3,9)","J(5,1,6)","S(5)","S(4)","J(1,1,2)","S(2)","Z(5)","J(1,1,1)","T(4,1)"] },
-  subtracao:   { label: "Subtração",     inputs: 2, registosInfo: "R1..R(n+1)", codigo: ["J(3,4,7)","S(4)","S(5)","J(1,1,1)","T(5,1)"] },
-  multiplicacao:{ label: "Multiplicação", inputs: 2, registosInfo: "R1..R(n+3)", codigo: ["J(2,3,9)","J(5,1,6)","S(5)","S(4)","J(1,1,2)","S(2)","Z(5)","J(1,1,1)","T(4,1)"] },
-  divisao:     { label: "Divisão",       inputs: 2, registosInfo: "R1..R(n+3)", codigo: ["J(2,3,8)","S(4)","S(5)","J(5,3,1)","Z(5)","J(1,1,1)","T(4,1)"] },
-  potencia:    { label: "Potência",      inputs: 2, registosInfo: "R1..R(n+3)", codigo: ["J(3,4,7)","S(4)","S(5)","J(1,1,1)","T(5,1)"] },
-  raiz:        { label: "Raiz",          inputs: 1, registosInfo: "R1..R(n+2)", codigo: ["Z(2)","J(2,2,6)","S(2)","J(1,1,2)","T(2,1)"] },
-  maximo:      { label: "Máximo",        inputs: 2, registosInfo: "R1..R(n+1)", codigo: ["J(2,3,5)","T(3,1)","J(1,1,6)","T(2,1)"] },
-  minimo:      { label: "Mínimo",        inputs: 2, registosInfo: "R1..R(n+1)", codigo: ["J(2,3,5)","T(2,1)","J(1,1,6)","T(3,1)"] },
-  fatorial:    { label: "Fatorial",      inputs: 1, registosInfo: "R1..R(n+4)", codigo: ["J(2,3,9)","J(5,1,6)","S(5)","S(4)","J(1,1,2)","S(2)","Z(5)","J(1,1,1)","T(4,1)"] },
-};
+// ---- Backend real: o front consome estes módulos ----
+import { OPERACOES } from "./operacoes.js";
+import { OPERACOES_META } from "./metadados.js";
+import { prepararExecucao, executarPasso, maiorRegistoUsado, montarRegistos } from "./nucleo.js";
 
 const $ = (sel) => document.querySelector(sel);
 const opSelect     = $("#op");
@@ -25,14 +17,23 @@ const exprHint     = $("#exprHint");
 const predefBox    = $("#predefBox");
 const exprBox      = $("#exprBox");
 const registCountBlock = $("#registCountBlock");
+const estudanteSection = $("#estudanteSection");
+const avancadoSection  = $("#avancadoSection");
+const programaManual   = $("#programaManual");
+const valoresAvancado  = $("#valoresAvancado");
+const avancadoHint     = $("#avancadoHint");
 
 let execTimer = null;
 let linhaAtual = -1;
 let linhasCodigo = [];
 let modoOperacao = "predef";      // "predef" | "expr"
+let modoNivel = "estudante";      // "estudante" | "avancado"
 let resultadoFinal = null;
 let passosPendentes = [];         // {reg, valor} por cada linha, no modo expressão
-let registosAtuais = [];          // [{nome, valor}]
+let registosAtuais = [];          // [{nome, valor}] — estado mostrado na tabela
+let registosReais = [];           // vetor numérico real, usado pelo motor URM (índice 0 = R1)
+let registosAvancado = [];        // nomes dos registos detetados no modo avançado (ex: ["R2","R3"])
+let estadoInicial = null;         // snapshot para o botão "Reiniciar"
 
 // ---------- Interpretador de expressões (2x + 3, 2/2 + 2x, etc.) ----------
 function tokenizar(str) {
@@ -155,14 +156,14 @@ function gerarPassos(nodo, vars, regInicial) {
 
 let variaveisAtuais = [];
 
-// popular select de operações
-for (const [key, op] of Object.entries(OPERACOES)) {
+// popular select de operações (a função vem de operacoes.js, o rótulo de metadados.js)
+for (const key of Object.keys(OPERACOES)) {
   const o = document.createElement("option");
-  o.value = key; o.textContent = op.label;
+  o.value = key; o.textContent = OPERACOES_META[key]?.label ?? key;
   opSelect.appendChild(o);
 }
 
-function operacaoAtual() { return OPERACOES[opSelect.value]; }
+function metaOperacaoAtual() { return OPERACOES_META[opSelect.value]; }
 
 function renderValoresPredef() {
   const n = parseInt(qtdInput.value, 10);
@@ -174,7 +175,12 @@ function renderValoresPredef() {
       <input type="number" id="val${i}" value="0">`;
     valoresBox.appendChild(field);
   }
-  infoBox.textContent = `Registos necessários para esta operação: ${operacaoAtual().registosInfo}`;
+  const meta = metaOperacaoAtual();
+  infoBox.textContent = `R1 guarda o resultado; R2..R${n + 1} são os valores inseridos.`;
+  infoBox.classList.toggle("warn", !meta.verificado);
+  if (!meta.verificado) {
+    infoBox.textContent += " ⚠ Programa ainda não verificado — o resultado pode não ser exato.";
+  }
 }
 
 function renderValoresExpr() {
@@ -206,6 +212,40 @@ function renderValores() {
   modoOperacao === "predef" ? renderValoresPredef() : renderValoresExpr();
 }
 
+// ---------- Modo Avançado: deteção de registos a partir do programa escrito ----------
+function linhasDoProgramaManual() {
+  return programaManual.value
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+}
+
+$("#detetarRegistos").onclick = () => {
+  const linhas = linhasDoProgramaManual();
+  if (!linhas.length) {
+    avancadoHint.textContent = "Escreva pelo menos uma instrução antes de detetar os registos.";
+    return;
+  }
+  const maior = maiorRegistoUsado(linhas);
+  if (maior < 2) {
+    avancadoHint.textContent = "O programa só usa R1 (resultado) — não há registos de entrada para preencher.";
+    registosAvancado = [];
+    valoresAvancado.innerHTML = "";
+    return;
+  }
+  registosAvancado = [];
+  valoresAvancado.innerHTML = "";
+  for (let r = 2; r <= maior; r++) {
+    registosAvancado.push(`R${r}`);
+    const field = document.createElement("div");
+    field.className = "value-field";
+    field.innerHTML = `<label for="val_av_${r}">Valor de R${r}</label>
+      <input type="number" id="val_av_${r}" value="0">`;
+    valoresAvancado.appendChild(field);
+  }
+  avancadoHint.textContent = `Registos de entrada detetados: ${registosAvancado.join(", ")}. R1 guarda o resultado.`;
+};
+
 function renderTabela(linhas) {
   // linhas: [{nome, valor}]
   tabelaBody.innerHTML = "";
@@ -235,7 +275,6 @@ function atualizarRegisto(nome, valor) {
 }
 
 function renderCodigo() {
-  linhasCodigo = operacaoAtual().codigo;
   codigoBox.innerHTML = linhasCodigo
     .map((l, i) => `<span class="line" data-i="${i}">${i + 1}  ${l}</span>`)
     .join("\n");
@@ -260,26 +299,50 @@ function mostrarResultado(texto) {
   requestAnimationFrame(() => resultado.classList.add("pop"));
 }
 
-function passo() {
+function marcarResultadoFinal(valor) {
+  mostrarResultado(`Resultado: R1 = ${valor}`);
+  const tr = document.getElementById("tr_R1");
+  if (tr) tr.classList.add("resultado-final");
+  log("Fim do programa.");
+}
+
+// modo expressão: os "passos" já vêm calculados (ver gerarPassos), só animamos
+function passoExpressao() {
   if (linhaAtual >= linhasCodigo.length - 1) {
     pararExecucao();
-    if (modoOperacao === "expr" && resultadoFinal !== null) {
-      mostrarResultado(`Resultado: R1 = ${resultadoFinal}`);
-      atualizarRegisto("R1", resultadoFinal);
-    } else {
-      mostrarResultado("Execução concluída (simulação)");
-    }
-    log("Fim do programa.");
+    atualizarRegisto("R1", resultadoFinal);
+    marcarResultadoFinal(resultadoFinal);
     return;
   }
   linhaAtual++;
   marcarLinha(linhaAtual);
+  const passoAtual = passosPendentes[linhaAtual];
   log(`PC ${linhaAtual + 1}: a executar ${linhasCodigo[linhaAtual]}`);
+  if (passoAtual) atualizarRegisto(`R${passoAtual.reg}`, passoAtual.valor);
+}
 
-  if (modoOperacao === "expr" && passosPendentes[linhaAtual]) {
-    const { reg, valor } = passosPendentes[linhaAtual];
-    atualizarRegisto(`R${reg}`, valor);
+// modo predefinido real + modo avançado: executa instrução a instrução sobre registosReais
+function passoURMReal() {
+  if (linhaAtual < 0) linhaAtual = 0;
+  if (linhaAtual >= linhasCodigo.length) {
+    pararExecucao();
+    marcarResultadoFinal(registosReais[0]);
+    return;
   }
+  marcarLinha(linhaAtual);
+  const r = executarPasso(registosReais, linhasCodigo, linhaAtual);
+  log(`PC ${linhaAtual + 1}: executado ${r.instrucaoExecutada}` + (r.registoAlterado ? ` → R${r.registoAlterado} = ${r.valorNovo}` : ""));
+  if (r.registoAlterado) atualizarRegisto(`R${r.registoAlterado}`, r.valorNovo);
+  linhaAtual = r.ponteiro;
+  if (linhaAtual >= linhasCodigo.length) {
+    pararExecucao();
+    marcarResultadoFinal(registosReais[0]);
+  }
+}
+
+function passo() {
+  if (modoNivel === "estudante" && modoOperacao === "expr") passoExpressao();
+  else passoURMReal();
 }
 
 function pararExecucao() {
@@ -294,15 +357,43 @@ opSelect.onchange = renderValores;
 
 function gerarPredef() {
   const valores = Array.from(valoresBox.querySelectorAll("input")).map((i) => +i.value);
-  linhasCodigo = operacaoAtual().codigo;
-  passosPendentes = [];
-  resultadoFinal = null;
+
+  // aqui é onde o front consome o backend: prepararExecucao chama a função
+  // real da operação (operacoes.js) e já devolve registos + instruções prontos
+  const { registos, instrucoes } = prepararExecucao(valores.length, opSelect.value, valores);
+  linhasCodigo = instrucoes;
+  registosReais = registos;
+
+  const tabela = registosReais.map((v, i) => ({ nome: `R${i + 1}`, valor: v }));
   renderCodigo();
-  renderTabela([
-    { nome: "R1", valor: 0 },
-    ...valores.map((v, i) => ({ nome: `R${i + 2}`, valor: v })),
-  ]);
-  log(`Operação "${operacaoAtual().label}" carregada com valores [${valores.join(", ")}].`);
+  renderTabela(tabela);
+  estadoInicial = { registos: [...registosReais], tabela };
+  log(`Operação "${metaOperacaoAtual().label}" carregada com valores [${valores.join(", ")}].`);
+}
+
+function gerarAvancado() {
+  const linhas = linhasDoProgramaManual();
+  if (!linhas.length) {
+    avancadoHint.textContent = "Escreva um programa antes de gerar.";
+    linhasCodigo = [];
+    return;
+  }
+  linhasCodigo = linhas;
+
+  const valores = registosAvancado.map((nome) => {
+    const idx = nome.replace("R", "");
+    return +(document.getElementById(`val_av_${idx}`)?.value ?? 0);
+  });
+
+  // modo avançado não tem "função de operação" — as instruções já vêm do textarea,
+  // por isso usamos montarRegistos() diretamente em vez de prepararExecucao()
+  registosReais = montarRegistos(registosAvancado.length, linhasCodigo, valores);
+
+  const tabela = registosReais.map((v, i) => ({ nome: `R${i + 1}`, valor: v }));
+  renderCodigo();
+  renderTabela(tabela);
+  estadoInicial = { registos: [...registosReais], tabela };
+  log(`Programa manual carregado com ${linhas.length} instruções.`);
 }
 
 function gerarExpressao() {
@@ -338,9 +429,37 @@ $("#gerar").onclick = () => {
   pararExecucao();
   linhaAtual = -1;
   historico.innerHTML = "";
-  modoOperacao === "predef" ? gerarPredef() : gerarExpressao();
-  mostrarResultado(linhasCodigo.length ? "Programa gerado — pronto para executar" : "Corrija a expressão para continuar");
+  resultadoFinal = null;
+  passosPendentes = [];
+
+  if (modoNivel === "avancado") {
+    gerarAvancado();
+  } else if (modoOperacao === "predef") {
+    gerarPredef();
+  } else {
+    gerarExpressao();
+  }
+  mostrarResultado(linhasCodigo.length ? "Programa gerado — pronto para executar" : "Corrija o programa/expressão para continuar");
 };
+
+document.querySelectorAll(".tab").forEach((t) => {
+  t.onclick = () => {
+    document.querySelectorAll(".tab").forEach((x) => x.classList.remove("active"));
+    t.classList.add("active");
+    modoNivel = t.dataset.mode;
+    estudanteSection.classList.toggle("hidden", modoNivel !== "estudante");
+    avancadoSection.classList.toggle("hidden", modoNivel !== "avancado");
+
+    pararExecucao();
+    linhaAtual = -1;
+    linhasCodigo = [];
+    registosReais = [];
+    codigoBox.innerHTML = "";
+    tabelaBody.innerHTML = "";
+    historico.innerHTML = "";
+    resultado.textContent = "A aguardar execução…";
+  };
+});
 
 document.querySelectorAll(".modebtn").forEach((btn) => {
   btn.onclick = () => {
@@ -369,14 +488,12 @@ $("#btnReiniciar").onclick = () => {
   marcarLinha(-1);
   historico.innerHTML = "";
   resultado.textContent = "A aguardar execução…";
-};
 
-document.querySelectorAll(".tab").forEach((t) => {
-  t.onclick = () => {
-    document.querySelectorAll(".tab").forEach((x) => x.classList.remove("active"));
-    t.classList.add("active");
-  };
-});
+  if (estadoInicial) {
+    registosReais = [...estadoInicial.registos];
+    renderTabela(estadoInicial.tabela.map((r) => ({ ...r })));
+  }
+};
 
 // estado inicial
 renderValores();

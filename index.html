@@ -23,39 +23,60 @@
       <button class="tab" data-mode="avancado">Modo Avançado</button>
     </div>
 
-    <fieldset class="block">
-      <legend>1. Operação</legend>
-      <div class="mode-toggle">
-        <button type="button" class="modebtn active" data-opmode="predef">Pré-definida</button>
-        <button type="button" class="modebtn" data-opmode="expr">Expressão</button>
-      </div>
+    <div id="estudanteSection">
+      <fieldset class="block">
+        <legend>1. Operação</legend>
+        <div class="mode-toggle">
+          <button type="button" class="modebtn active" data-opmode="predef">Pré-definida</button>
+          <button type="button" class="modebtn" data-opmode="expr">Expressão</button>
+        </div>
 
-      <div id="predefBox">
-        <label for="op">Escolha a operação matemática</label>
-        <select id="op"></select>
-      </div>
+        <div id="predefBox">
+          <label for="op">Escolha a operação matemática</label>
+          <select id="op"></select>
+        </div>
 
-      <div id="exprBox" class="hidden">
-        <label for="expr">Escreva a expressão (ex: 2x + 3, 2/2 + 2x)</label>
-        <input type="text" id="expr" placeholder="ex: 2x + 3">
-        <p class="hint" id="exprHint">As variáveis são detetadas automaticamente.</p>
-      </div>
-    </fieldset>
+        <div id="exprBox" class="hidden">
+          <label for="expr">Escreva a expressão (ex: 2x + 3, 2/2 + 2x)</label>
+          <input type="text" id="expr" placeholder="ex: 2x + 3">
+          <p class="hint" id="exprHint">As variáveis são detetadas automaticamente.</p>
+        </div>
+      </fieldset>
 
-    <fieldset class="block" id="registCountBlock">
-      <legend>2. Registadores de entrada</legend>
-      <label for="qtd">Quantidade de valores</label>
-      <div class="stepper">
-        <button id="qtdMenos" type="button" aria-label="Diminuir">−</button>
-        <input id="qtd" type="number" min="1" max="6" value="2" readonly>
-        <button id="qtdMais" type="button" aria-label="Aumentar">+</button>
-      </div>
-    </fieldset>
+      <fieldset class="block" id="registCountBlock">
+        <legend>2. Registadores de entrada</legend>
+        <label for="qtd">Quantidade de valores</label>
+        <div class="stepper">
+          <button id="qtdMenos" type="button" aria-label="Diminuir">−</button>
+          <input id="qtd" type="number" min="1" max="6" value="2" readonly>
+          <button id="qtdMais" type="button" aria-label="Aumentar">+</button>
+        </div>
+      </fieldset>
 
-    <fieldset class="block">
-      <legend>3. Valores</legend>
-      <div id="valores" class="values-grid"></div>
-    </fieldset>
+      <fieldset class="block">
+        <legend>3. Valores</legend>
+        <div id="valores" class="values-grid"></div>
+      </fieldset>
+    </div>
+
+    <div id="avancadoSection" class="hidden">
+      <fieldset class="block">
+        <legend>1. Programa URM</legend>
+        <label for="programaManual">Escreva uma instrução por linha</label>
+        <textarea id="programaManual" rows="7" spellcheck="false" placeholder="T(2,1)
+J(3,4,6)
+S(1)
+S(4)
+J(1,1,2)"></textarea>
+        <button id="detetarRegistos" type="button" class="secondary">Detetar Registos de Entrada</button>
+      </fieldset>
+
+      <fieldset class="block">
+        <legend>2. Valores de Entrada</legend>
+        <div id="valoresAvancado" class="values-grid"></div>
+        <p class="hint" id="avancadoHint">Escreva o programa e clique em "Detetar Registos".</p>
+      </fieldset>
+    </div>
 
     <p class="info" id="infoRegistos"></p>
 
@@ -113,6 +134,6 @@
   elementares (zerar, incrementar, transferir e saltar condicionalmente).
 </footer>
 
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 </body>
 </html>

@@ -1,5 +1,4 @@
-/**
- * As funções dentro deste meu arquivo, têm como abjectivo gerar código urm, segundo diferentes tipos de operações
+ /* As funções dentro deste meu arquivo, têm como abjectivo gerar código urm, segundo diferentes tipos de operações
  */
 
 // A função da soma abaixo, apenas recebe uma qtd de registradores e gera o código URM corresponde a soma
@@ -33,5 +32,6 @@ const generate_urm_sum = (qtd_registers)=>{
 }
 
 
-// A instrução abaixo serve apenas para teste
-console.log(generate_urm_sum(6));
+export const OPERACOES = {
+    generate_urm_sum,
+};
