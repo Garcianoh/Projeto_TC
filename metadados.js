@@ -3,7 +3,7 @@
 // em operacoes.js para o contrato do colega ficar limpo: cada função só recebe
 // a quantidade de entradas e devolve instruções — nada de UI misturado aí.
 export const OPERACOES_META = {
-  generate_urm_sum:          { label: "Soma",          verificado: true },
+  soma:          { label: "Soma",          verificado: true },
   subtracao:     { label: "Subtração",     verificado: true },
   maximo:        { label: "Máximo",        verificado: true },
   minimo:        { label: "Mínimo",        verificado: true },

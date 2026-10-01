@@ -350,3 +350,8 @@ const factorial = ()=>{
 
     return instructions_array;
 }
+
+export const OPERACOES = {
+  soma, subtracao, maximo, minimo,
+  multiplicacao, divisao, potencia, raiz, fatorial,
+};
