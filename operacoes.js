@@ -1,5 +1,4 @@
-/**
- * As funções dentro deste meu arquivo, têm como abjectivo gerar código urm, segundo diferentes tipos de operações
+ /* As funções dentro deste meu arquivo, têm como abjectivo gerar código urm, segundo diferentes tipos de operações
  */
 
 // A função da soma abaixo, apenas recebe uma qtd de registradores e gera o código URM corresponde a soma
@@ -351,3 +350,8 @@ const factorial = ()=>{
 
     return instructions_array;
 }
+
+export const OPERACOES = {
+  soma, subtracao, maximo, minimo,
+  multiplicacao, divisao, potencia, raiz, fatorial,
+};
