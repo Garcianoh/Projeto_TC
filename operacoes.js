@@ -319,7 +319,7 @@ const raiz = ()=>{
 }
 
 // factorial de R2 (0! = 1)
-const factorial = ()=>{
+const fatorial = ()=>{
     // R3 = i, R4/R5 = contadores, R6 = produto temporário, R7 = factorial parcial
     const final_code = [
         `Z(7)`,

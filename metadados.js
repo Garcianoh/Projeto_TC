@@ -9,7 +9,7 @@ export const OPERACOES_META = {
   minimo:        { label: "Mínimo",        verificado: true },
   multiplicacao: { label: "Multiplicação", verificado: false },
   divisao:       { label: "Divisão",       verificado: false },
-  potencia:      { label: "Potência",      verificado: false },
-  raiz:          { label: "Raiz",          verificado: false },
-  fatorial:      { label: "Fatorial",      verificado: false },
+  potencia:      { label: "Potência",      verificado: false, entradas: 2, rotulos: ["Base", "Expoente"] },
+  raiz:          { label: "Raiz",          verificado: false, entradas: 1 },
+  fatorial:      { label: "Fatorial",      verificado: false, entradas: 1 },
 };

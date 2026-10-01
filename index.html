@@ -37,8 +37,8 @@
         </div>
 
         <div id="exprBox" class="hidden">
-          <label for="expr">Escreva a expressão (ex: 2x + 3, 2/2 + 2x)</label>
-          <input type="text" id="expr" placeholder="ex: 2x + 3">
+          <label for="expr">Escreva a expressão (ex: 2x + 2^x, max(x, y), fat(x), raiz(x), x!)</label>
+          <input type="text" id="expr" placeholder="ex: 2x + 2^x">
           <p class="hint" id="exprHint">As variáveis são detetadas automaticamente.</p>
         </div>
       </fieldset>
@@ -62,19 +62,28 @@
     <div id="avancadoSection" class="hidden">
       <fieldset class="block">
         <legend>1. Programa URM</legend>
-        <label for="programaManual">Escreva uma instrução por linha</label>
-        <textarea id="programaManual" rows="7" spellcheck="false" placeholder="T(2,1)
-J(3,4,6)
-S(1)
+        <label for="programaManual">Escreva uma instrução por linha (linhas numeradas a partir de 1)</label>
+        <textarea id="programaManual" rows="7" spellcheck="false" placeholder="J(4,3,5)
+S(2)
 S(4)
-J(1,1,2)"></textarea>
-        <button id="detetarRegistos" type="button" class="secondary">Detetar Registos de Entrada</button>
+J(4,4,1)
+T(2,1)"></textarea>
       </fieldset>
 
       <fieldset class="block">
-        <legend>2. Valores de Entrada</legend>
+        <legend>2. Registadores de entrada</legend>
+        <label for="qtdAv">Quantidade de registos de entrada</label>
+        <div class="stepper">
+          <button id="qtdAvMenos" type="button" aria-label="Diminuir">−</button>
+          <input id="qtdAv" type="number" min="0" max="6" value="2" readonly>
+          <button id="qtdAvMais" type="button" aria-label="Aumentar">+</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="block">
+        <legend>3. Valores de Entrada</legend>
         <div id="valoresAvancado" class="values-grid"></div>
-        <p class="hint" id="avancadoHint">Escreva o programa e clique em "Detetar Registos".</p>
+        <p class="hint" id="avancadoHint"></p>
       </fieldset>
     </div>
 
@@ -116,7 +125,7 @@ J(1,1,2)"></textarea>
           <button id="btnPausar">⏸ Pausar</button>
           <button id="btnReiniciar">↺ Reiniciar</button>
         </div>
-        <p class="hint">Execução ilustrativa — o motor real da URM será ligado numa próxima etapa.</p>
+        <p class="hint">Gerar prepara o programa; use Passo (uma instrução) ou Executar (automático).</p>
       </fieldset>
     </div>
 
