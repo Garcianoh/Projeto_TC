@@ -4,7 +4,7 @@
 
 // A função da soma abaixo, apenas recebe uma qtd de registradores e gera o código URM corresponde a soma
 
-const generate_urm_sum = (qtd_registers)=>{
+const soma = (qtd_registers)=>{
     // Uma função de soma de uma máquina urm, divide-a em três partes
     if(qtd_registers < 2) throw new Error("Número de registadores menor que 2");
     const start_code = (linha)=>{
@@ -43,7 +43,7 @@ const generate_urm_sum = (qtd_registers)=>{
 // A instrução abaixo serve apenas para teste
 //console.log(generate_urm_sum(6));
 // R2 - R3 - ... - R(n+1), subtração natural (nunca abaixo de 0)
-const generate_urm_sub = (qtd_registers)=>{
+const subtracao = (qtd_registers)=>{
     if(qtd_registers < 2) throw new Error("Número de registadores menor que 2");
     const c = qtd_registers+2; // contador
     const r = qtd_registers+3; // resultado parcial
@@ -87,7 +87,7 @@ const generate_urm_sub = (qtd_registers)=>{
 }
 
 // R2 * R3 * ... * R(n+1)
-const generate_urm_mul = (qtd_registers)=>{
+const multiplicacao = (qtd_registers)=>{
     if(qtd_registers < 2) throw new Error("Número de registadores menor que 2");
     const c = qtd_registers+2; // vezes já somadas
     const d = qtd_registers+3; // contador dentro da soma de R2
@@ -132,7 +132,7 @@ const generate_urm_mul = (qtd_registers)=>{
 }
 
 // ((R2 / R3) / R4) / ... / R(n+1), divisão inteira (floor)
-const generate_urm_div = (qtd_registers)=>{
+const divisao = (qtd_registers)=>{
     if(qtd_registers < 2) throw new Error("Número de registadores menor que 2");
     const t = qtd_registers+2; // conta até ao divisor
     const x = qtd_registers+3; // percorre 0..R2
@@ -179,7 +179,7 @@ const generate_urm_div = (qtd_registers)=>{
 }
 
 // R2 ^ R3 (apenas dois operandos; 0^0 = 1)
-const generate_urm_pow = ()=>{
+const potencia = ()=>{
     // R4 = vezes já multiplicadas, R5/R6 = contadores, R7 = produto temporário, R8 = potência
     const final_code = [
         `Z(8)`,
@@ -213,7 +213,7 @@ const generate_urm_pow = ()=>{
 
 
 // max(R2, R3, ..., R(n+1))
-const generate_urm_max = (qtd_registers)=>{
+const maximo = (qtd_registers)=>{
     if(qtd_registers < 2) throw new Error("Número de registadores menor que 2");
     const c = qtd_registers+2; // contador
 
@@ -251,7 +251,7 @@ const generate_urm_max = (qtd_registers)=>{
 }
 
 // min(R2, R3, ..., R(n+1))
-const generate_urm_min = (qtd_registers)=>{
+const minimo = (qtd_registers)=>{
     if(qtd_registers < 2) throw new Error("Número de registadores menor que 2");
     const c = qtd_registers+2; // contador
 
@@ -289,7 +289,7 @@ const generate_urm_min = (qtd_registers)=>{
 }
 
 // raiz quadrada inteira (floor) de R2
-const generate_urm_sqrt = ()=>{
+const raiz = ()=>{
     // R3 = x (percorre 0..R2), R4 = raiz, R5 = passos desde r^2, R6 = tamanho do grupo (2r+1)
     const final_code = [
         `Z(3)`,
@@ -320,7 +320,7 @@ const generate_urm_sqrt = ()=>{
 }
 
 // factorial de R2 (0! = 1)
-const generate_urm_fact = ()=>{
+const factorial = ()=>{
     // R3 = i, R4/R5 = contadores, R6 = produto temporário, R7 = factorial parcial
     const final_code = [
         `Z(7)`,
@@ -351,5 +351,3 @@ const generate_urm_fact = ()=>{
 
     return instructions_array;
 }
-
-console.log(generate_urm_pow(2, 3));
